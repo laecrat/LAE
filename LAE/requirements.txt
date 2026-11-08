@@ -1,0 +1,19 @@
+# LAE - AI Assistant Dependencies
+# Python >= 3.8 required
+
+# Core dependencies
+requests>=2.28.0
+urllib3>=1.26.0
+
+# Optional dependencies for extended functionality
+webbrowser>=1.0.0
+pyautogui>=0.9.54  # For GUI automation
+psutil>=5.9.0  # For system monitoring
+pillow>=9.0.0  # For image handling
+
+# Development dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Type hints
+typing-extensions>=4.0.0
