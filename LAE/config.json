@@ -4,7 +4,7 @@
   "description": "AI Assistant for opening websites, apps, and running programs",
   "author": "lae.crat074@gmail.com",
   "features": {
-    "hotkey": "win+space",
+    "hotkey": "alt+space",
     "browser": {
       "default_engine": "duckduckgo",
       "timeout": 30,
