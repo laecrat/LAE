@@ -8,7 +8,8 @@
 - 🔍 **Website Search** - Search on specific websites (Google, DuckDuckGo, GitHub, etc.)
 - 💻 **Open Applications** - Launch desktop applications by name
 - ⚡ **Run Commands** - Execute system commands safely
-- ⌨️ **Hotkey Overlay** - Press Alt+Space for instant command window (like Bixby)
+- ⌨️ **Hotkey Overlay** - Press Ctrl+Alt+L for instant command window (like Bixby)
+  - Note: Run as Administrator for global hotkey to work reliably on Windows
 - 🛡️ **Safe Mode** - Prevents dangerous operations
 
 ## Installation
@@ -37,15 +38,26 @@ chmod +x main.py
 
 ## Usage
 
-### Hotkey Overlay Mode (Alt+Space) - Like Bixby
+### Hotkey Overlay Mode (Ctrl+Alt+L) - Like Bixby
 
-This is the main way to use LAE! Press **Alt+Space** to open a small overlay window where you can type commands.
+This is the main way to use LAE! Press **Ctrl+Alt+L** to open a small overlay window where you can type commands.
+
+**IMPORTANT:** On Windows, run your terminal as **Administrator** for the global hotkey to work:
+1. Right-click PowerShell/Terminal → "Run as administrator"
+2. Then run: `python main.py --hotkey`
+
+A system tray icon will also appear (bottom-right corner of taskbar) — click it to open LAE.
 
 ```bash
-# Run LAE with hotkey overlay
+# Run LAE with hotkey overlay + tray icon
 python main.py --hotkey
 # or
-python main.py -h
+python main.py -k
+
+# Alternative: always-visible mini window (no admin needed)
+python main.py --window
+# or
+python main.py -w
 ```
 
 ### Command Types in Hotkey Mode
