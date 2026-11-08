@@ -1,0 +1,35 @@
+{
+  "name": "LAE",
+  "version": "1.0.0",
+  "description": "AI Assistant for opening websites, apps, and running programs",
+  "author": "lae.crat074@gmail.com",
+  "features": {
+    "browser": {
+      "default_engine": "duckduckgo",
+      "timeout": 30,
+      "auto_open": true
+    },
+    "app": {
+      "safe_mode": true,
+      "allow_unknown_apps": false,
+      "preferred_browsers": ["chrome", "edge", "firefox"]
+    },
+    "commands": {
+      "safe_mode": true,
+      "timeout": 30,
+      "max_output_lines": 100
+    }
+  },
+  "integrations": {
+    "github": {
+      "enabled": true,
+      "token": "environment",
+      "auto_update": true
+    }
+  },
+  "update": {
+    "check_frequency": "daily",
+    "auto_update": false,
+    "repository": "lae.crat074/lae"
+  }
+}

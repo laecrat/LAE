@@ -1,12 +1,16 @@
 # LAE - AI Assistant Dependencies
 # Python >= 3.8 required
+# Note: webbrowser and tkinter are Python standard library modules (built-in)
 
 # Core dependencies
 requests>=2.28.0
 urllib3>=1.26.0
 
+# Hotkey and overlay dependencies
+keyboard>=0.13.5  # For global hotkey detection
+pystray>=0.19.0  # For system tray icon
+
 # Optional dependencies for extended functionality
-webbrowser>=1.0.0
 pyautogui>=0.9.54  # For GUI automation
 psutil>=5.9.0  # For system monitoring
 pillow>=9.0.0  # For image handling

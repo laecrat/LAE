@@ -8,6 +8,7 @@
 - 🔍 **Website Search** - Search on specific websites (Google, DuckDuckGo, GitHub, etc.)
 - 💻 **Open Applications** - Launch desktop applications by name
 - ⚡ **Run Commands** - Execute system commands safely
+- ⌨️ **Hotkey Overlay** - Press Alt+Space for instant command window (like Bixby)
 - 🛡️ **Safe Mode** - Prevents dangerous operations
 
 ## Installation
@@ -36,6 +37,44 @@ chmod +x main.py
 
 ## Usage
 
+### Hotkey Overlay Mode (Alt+Space) - Like Bixby
+
+This is the main way to use LAE! Press **Alt+Space** to open a small overlay window where you can type commands.
+
+```bash
+# Run LAE with hotkey overlay
+python main.py --hotkey
+# or
+python main.py -h
+```
+
+### Command Types in Hotkey Mode
+
+Type these commands in the overlay window:
+
+```bash
+# Open websites
+open website google.com
+open website https://www.github.com
+open site stackoverflow.com
+
+# Open applications
+open chrome
+open vscode
+open powershell
+open app calculator
+
+# Search the web
+search python tutorials
+search machine learning
+search github claude code
+
+# Run system commands
+run ls -la
+run git status
+run python --version
+```
+
 ### Command Line Interface
 
 ```bash
@@ -47,10 +86,6 @@ python main.py open www.github.com
 # Search the web
 python main.py search "machine learning" --engine google
 python main.py search "python tutorials" --engine duckduckgo
-
-# Search within a specific website
-python main.py search-website "claude code" github
-python main.py search-website "python decorators" stackoverflow
 
 # Open an application
 python main.py run chrome
@@ -131,7 +166,7 @@ LAE runs in safe mode by default, which:
 ### Project Structure
 ```
 LAE/
-├── main.py              # Main entry point and CLI
+├── main.py              # Main entry point and CLI with hotkey overlay
 ├── browser_controller.py # Website and search handling
 ├── app_controller.py    # Application management
 ├── command_executor.py  # System command execution
