@@ -16,6 +16,7 @@ class BrowserController:
     def __init__(self):
         self.supported_browsers = ["chrome", "firefox", "edge", "safari"]
         self.search_engines = {
+            "brave": "https://search.brave.com/search?q=",
             "google": "https://www.google.com/search?q=",
             "duckduckgo": "https://duckduckgo.com/?q=",
             "bing": "https://www.bing.com/search?q=",
@@ -59,7 +60,7 @@ class BrowserController:
         except Exception as e:
             return f"❌ Failed to open in {browser}: {str(e)}"
 
-    def search(self, query: str, engine: str = "duckduckgo") -> str:
+    def search(self, query: str, engine: str = "brave") -> str:
         """Search using a specific search engine."""
         try:
             if engine.lower() not in self.search_engines:

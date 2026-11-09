@@ -6,7 +6,7 @@
   "features": {
     "hotkey": "win+`",
     "browser": {
-      "default_engine": "duckduckgo",
+      "default_engine": "brave",
       "timeout": 30,
       "auto_open": true
     },

@@ -67,9 +67,12 @@ Keys: **Enter** = run · **Esc** = hide · drag the title to move · click outsi
 ### Change the hotkey
 Edit `config.json`:
 ```json
-"features": { "hotkey": "win+`" }
+"features": { "hotkey": "win+`", "browser": { "default_engine": "brave" } }
 ```
 Safe two-key choices (avoid `alt+space`, `win+space`, `win+l/d/e/r/c`, `ctrl+space`, `ctrl+alt+l`): `win+`` `, `win+;`, `win+'`, `win+[`, `alt+`` `. Then restart LAE.
+
+### Which search engine am I using?
+The default is in `config.json` → `features.browser.default_engine` (currently `brave`). Supported: `brave`, `google`, `duckduckgo`, `bing`, `yahoo`. The opened search URL also reveals it (e.g. `https://search.brave.com/search?q=...`). Change it in `config.json` and restart LAE.
 
 ### CLI (one-shot, no GUI)
 ```bash

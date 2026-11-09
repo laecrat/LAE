@@ -20,17 +20,30 @@ from command_executor import CommandExecutor
 DEFAULT_HOTKEY = 'win+`'
 
 
-def load_hotkey():
-    """Read hotkey from config.json next to this file; fall back to default."""
+def _load_config():
     try:
         cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
         with open(cfg_path, encoding="utf-8") as f:
-            return json.load(f).get("features", {}).get("hotkey", DEFAULT_HOTKEY)
+            return json.load(f)
     except Exception:
-        return DEFAULT_HOTKEY
+        return {}
+
+
+DEFAULT_ENGINE = "brave"
+
+
+def load_hotkey():
+    """Read hotkey from config.json next to this file; fall back to default."""
+    return _load_config().get("features", {}).get("hotkey", DEFAULT_HOTKEY)
+
+
+def load_default_engine():
+    """Default search engine from config.json (features.browser.default_engine)."""
+    return _load_config().get("features", {}).get("browser", {}).get("default_engine", DEFAULT_ENGINE)
 
 
 HOTKEY = load_hotkey()
+DEFAULT_SEARCH_ENGINE = load_default_engine()
 
 # Thread-safe queue: hotkey/tray callbacks put messages here, tkinter mainloop reads them
 event_queue = queue.Queue()
@@ -55,8 +68,8 @@ class LAE:
     def open_website(self, url: str) -> str:
         return self.browser.open(url)
 
-    def search_website(self, query: str, website: str = "duckduckgo") -> str:
-        return self.browser.search(query, website)
+    def search_website(self, query: str, website: str = None) -> str:
+        return self.browser.search(query, website or DEFAULT_SEARCH_ENGINE)
 
     def open_app(self, app_name: str) -> str:
         return self.app_controller.open(app_name)
@@ -68,7 +81,7 @@ class LAE:
         if action == "open" and self._is_url(target):
             return self.open_website(target)
         elif action == "search":
-            return self.search_website(target, "duckduckgo")
+            return self.search_website(target)
         elif action == "run" and self._is_app(target):
             return self.open_app(target)
         elif action in ("execute", "run"):
@@ -271,7 +284,7 @@ class LAEApp:
             parts = raw.split()
             if len(parts) >= 3 and parts[1].lower() in ("on", "at", "in"):
                 return self.lae.search_website(" ".join(parts[3:]), parts[2])
-            return self.lae.search_website(raw.replace(parts[0], "", 1).strip(), "duckduckgo")
+            return self.lae.search_website(raw.replace(parts[0], "", 1).strip())
         if cmd.startswith("open app "):
             # keep original case so app matching can prefer the case you typed
             return self.lae.open_app(raw[len("open app"):].strip())
