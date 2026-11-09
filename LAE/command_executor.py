@@ -58,6 +58,14 @@ class CommandExecutor:
             # Determine shell based on platform
             use_shell = cmd_name in ["cd", "echo", "ls", "dir"] or not shutil.which(cmd_name)
 
+            kwargs = {}
+            if self.system == "Windows":
+                kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+                si = subprocess.STARTUPINFO()
+                si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                si.wShowWindow = 0  # SW_HIDE
+                kwargs["startupinfo"] = si
+
             if use_shell or self.system == "Windows":
                 result = subprocess.run(
                     command,
@@ -65,7 +73,8 @@ class CommandExecutor:
                     text=True,
                     timeout=timeout,
                     shell=True,
-                    cwd=os.getcwd()
+                    cwd=os.getcwd(),
+                    **kwargs
                 )
             else:
                 result = subprocess.run(
@@ -74,7 +83,8 @@ class CommandExecutor:
                     text=True,
                     timeout=timeout,
                     shell=False,
-                    cwd=os.getcwd()
+                    cwd=os.getcwd(),
+                    **kwargs
                 )
 
             output = []
@@ -98,13 +108,20 @@ class CommandExecutor:
     def run_background(self, command: str, timeout: int = 60) -> str:
         """Run a command in the background."""
         try:
+            popen_kwargs = {"shell": True}
+            if self.system == "Windows":
+                popen_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) | getattr(subprocess, "DETACHED_PROCESS", 0x00000008)
+                si = subprocess.STARTUPINFO()
+                si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                si.wShowWindow = 0
+                popen_kwargs["startupinfo"] = si
             process = subprocess.Popen(
                 command,
-                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                cwd=os.getcwd()
+                cwd=os.getcwd(),
+                **popen_kwargs
             )
 
             return f"🚀 Running in background (PID: {process.pid}): {command}"

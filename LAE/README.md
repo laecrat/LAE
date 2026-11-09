@@ -1,212 +1,125 @@
 # LAE - AI Assistant
 
-**LAE** (LAE = "Launcher and Assistant for Everything") is an AI-powered assistant that can open websites, apps, and run programs as instructed.
+**LAE** (Launcher and Assistant for Everything) is a Windows-first voice/typing assistant: press a hotkey, type a command, and it opens websites, searches the web, launches your installed apps, and runs commands — with a floating translucent command bar.
 
 ## Features
 
-- 🌐 **Open Websites** - Open any URL in your default browser
-- 🔍 **Website Search** - Search on specific websites (Google, DuckDuckGo, GitHub, etc.)
-- 💻 **Open Applications** - Launch desktop applications by name
-- ⚡ **Run Commands** - Execute system commands safely
-- ⌨️ **Hotkey Overlay** - Press Ctrl+Alt+L for instant command window (like Bixby)
-  - Note: Run as Administrator for global hotkey to work reliably on Windows
-- 🛡️ **Safe Mode** - Prevents dangerous operations
+- 🌐 **Open websites** — `open website google.com` opens `https://www.google.com`
+- 🔍 **Web & site search** — `search python tutorials`, or `search github claude code` to search on a specific site
+- 💻 **Smart app launching** — `open app <name>` scans your **real installed apps** (Start Menu shortcuts + UWP/Store apps via `Get-StartApps`) and opens the match. Matching is case-aware: exact case you typed wins (`boy` → `boy`, not `Boy`), otherwise case-insensitive (`girls` → `Girls`), then substring (`chrome` → `Google Chrome`)
+- ⚡ **Run commands** — `run git status`, `execute ls -la`
+- 🪟 **Floating command bar** — translucent (`-alpha`), always-on-top window that opens at the **center of the screen**
+- ⌨️ **Configurable hotkey** — default `win+`` ` (set in `config.json` → `features.hotkey`); conflict-free on Windows. Tray icon (double-click) always works without admin
+- 👆 **Auto-focus** — cursor lands in the typing bar automatically, no click needed
+- 🖱️ **Draggable** — drag the window by its title/background anywhere on the desktop
+- 🙈 **Click-outside-to-hide** — click anywhere else and the bar disappears
+- 📶 **Live status** — the bar shows `🔍 Searching…` → `🚀 Opening X…` → `✅ Opened: X`
+- ⚡ **Instant first search** — installed-app list is pre-scanned in the background at startup
+- 🚫 **No console flash** — apps launch via Win32 `ShellExecuteW` / `explorer.exe`, so no cmd window ever pops up
+- 🔁 **Runs in background** — via `pythonw.exe` (no console); survives closing the terminal
+- 🖥️ **Desktop shortcut + startup** — one-click launch and auto-start on login
+- 🛡️ **Safe mode** — blocks dangerous commands by default
 
 ## Installation
 
 ### Prerequisites
-- Python 3.8 or higher
-- Windows 10/11, macOS, or Linux
+- Python 3.8+ (3.13 recommended) on Windows 10/11 (macOS/Linux basic support)
+- `pip install -r requirements.txt`
 
-### Setup
-
-1. Clone this repository:
-```bash
-git clone https://github.com/lae-crat074/lae.git
-cd lae
-```
-
-2. Install dependencies:
-```bash
+### Quick start (Windows)
+```powershell
+cd LAE
 pip install -r requirements.txt
+python main.py --hotkey        # tray icon + hotkey (run terminal as Admin for the hotkey)
+python main.py --window        # always-visible mini window (no admin needed)
 ```
 
-3. Make the script executable:
-```bash
-chmod +x main.py
+### Make it permanent
+```powershell
+# Desktop shortcut (double-click to start in background, no console)
+powershell -ExecutionPolicy Bypass -File create_shortcut.ps1
+
+# Auto-start on Windows login
+powershell -ExecutionPolicy Bypass -File install_startup.ps1
+# undo startup:
+powershell -ExecutionPolicy Bypass -File install_startup.ps1 -Remove
 ```
+
+`lae.bat` launches LAE with `pythonw.exe` (no console window), so it keeps running after you close any terminal.
 
 ## Usage
 
-### Hotkey Overlay Mode (Ctrl+Alt+L) - Like Bixby
-
-This is the main way to use LAE! Press **Ctrl+Alt+L** to open a small overlay window where you can type commands.
-
-**IMPORTANT:** On Windows, run your terminal as **Administrator** for the global hotkey to work:
-1. Right-click PowerShell/Terminal → "Run as administrator"
-2. Then run: `python main.py --hotkey`
-
-A system tray icon will also appear (bottom-right corner of taskbar) — click it to open LAE.
+Open LAE with **Win + `` ` ``** (hotkey), **double-click the tray icon**, or the **desktop shortcut**. Then type and press **Enter**:
 
 ```bash
-# Run LAE with hotkey overlay + tray icon
-python main.py --hotkey
-# or
-python main.py -k
-
-# Alternative: always-visible mini window (no admin needed)
-python main.py --window
-# or
-python main.py -w
-```
-
-### Command Types in Hotkey Mode
-
-Type these commands in the overlay window:
-
-```bash
-# Open websites
 open website google.com
-open website https://www.github.com
-open site stackoverflow.com
-
-# Open applications
+open youtube.com
+open app helium            # finds installed app by name (case-aware)
 open chrome
-open vscode
-open powershell
-open app calculator
-
-# Search the web
 search python tutorials
-search machine learning
-search github claude code
-
-# Run system commands
-run ls -la
+search stackoverflow python list
 run git status
-run python --version
+execute python --version
 ```
 
-### Command Line Interface
+Keys: **Enter** = run · **Esc** = hide · drag the title to move · click outside to dismiss.
 
+### Change the hotkey
+Edit `config.json`:
+```json
+"features": { "hotkey": "win+`" }
+```
+Safe two-key choices (avoid `alt+space`, `win+space`, `win+l/d/e/r/c`, `ctrl+space`, `ctrl+alt+l`): `win+`` `, `win+;`, `win+'`, `win+[`, `alt+`` `. Then restart LAE.
+
+### CLI (one-shot, no GUI)
 ```bash
-# Open a website
 python main.py open https://www.google.com
-python main.py open example.com
-python main.py open www.github.com
-
-# Search the web
-python main.py search "machine learning" --engine google
-python main.py search "python tutorials" --engine duckduckgo
-
-# Open an application
+python main.py search "machine learning"
 python main.py run chrome
-python main.py run vscode
-python main.py run notepad
-python main.py run powershell
-
-# Run a system command
-python main.py execute "ls -la"
 python main.py execute "git status"
-python main.py execute "python --version"
 ```
 
-### Python API
-
-```python
-from main import LAE
-
-# Create an instance
-assistant = LAE()
-
-# Open a website
-assistant.open_website("https://www.example.com")
-
-# Search on a website
-assistant.search_website("your query", "github")
-
-# Open an application
-assistant.open_app("chrome")
-
-# Run a command
-assistant.run_command("python --version")
-
-# Execute any action
-assistant.execute("open", "https://google.com")
-assistant.execute("search", "python programming")
-assistant.execute("run", "notepad")
-assistant.execute("execute", "ls -la")
+### Modes
+```bash
+python main.py --hotkey    # tray + hotkey, hidden window (default)
+python main.py --window    # always-visible mini window
+python main.py --bg        # background mode for pythonw / launchers
 ```
 
-## Supported Applications
-
-### Windows
-- notepad, calculator, paint
-- chrome, firefox, edge
-- powershell, cmd
-- visual studio code (vscode)
-- file explorer, settings
-- task manager, registry
-
-### macOS
-- Terminal, Safari
-- Chrome, Firefox
-- Visual Studio Code
-- Finder
-
-### Linux
-- gnome-terminal, konsole
-- firefox, chrome
-- visual studio code
-
-## Supported Search Engines
-- Google
-- DuckDuckGo
-- Bing
-- Yahoo
-- GitHub (for code search)
-
-## Security
-
-LAE runs in safe mode by default, which:
-- Blocks dangerous commands (rm -rf, etc.)
-- Requires explicit permissions for global installs
-- Prevents data-destructive operations
-
-## Development
-
-### Project Structure
+## Project structure
 ```
 LAE/
-├── main.py              # Main entry point and CLI with hotkey overlay
-├── browser_controller.py # Website and search handling
-├── app_controller.py    # Application management
-├── command_executor.py  # System command execution
-├── requirements.txt     # Python dependencies
-├── README.md           # This file
-└── .gitignore          # Git ignore rules
+├── main.py                 # CLI + LAEApp (floating bar, tray, hotkey, drag, focus)
+├── app_controller.py       # installed-app scan + case-aware match + hidden launch
+├── browser_controller.py   # websites & search engines
+├── command_executor.py     # safe system commands (hidden window)
+├── config.json             # hotkey + settings (edit me)
+├── requirements.txt
+├── lae.bat                 # background launcher (pythonw, no console)
+├── create_shortcut.ps1     # makes LAE.lnk on the Desktop
+├── install_startup.ps1     # adds/removes LAE from Windows Startup
+├── install.bat / setup.sh  # dependency installers
+├── test_installation.py    # validation script (ASCII-safe)
+├── VALIDATION.md           # pre-commit checks
+├── .github/workflows/update.yml
+├── LICENSE
+└── README.md
 ```
 
-### Running Tests
+## Validation
 ```bash
-pytest tests/ -v
+python -m py_compile main.py app_controller.py browser_controller.py command_executor.py
+python test_installation.py
 ```
+
+## Security
+Safe mode blocks dangerous commands (e.g. `rm -rf`, destructive redirects) and requires explicit permission for global installs.
 
 ## License
-
-MIT License - See LICENSE file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+MIT — see [LICENSE](LICENSE).
 
 ## Author
-
-LAE is developed by lae.crat074@gmail.com
+LAE — lae.crat074@gmail.com · GitHub: https://github.com/laecrat/LAE
 
 ---
-
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

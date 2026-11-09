@@ -92,48 +92,67 @@ class LAEApp:
         self.root = tk.Tk()
         self.root.withdraw()  # hidden until activated
 
-        # Overlay window (created once, shown/hidden)
+        # Overlay window — translucent dark panel that floats above everything
+        BG = '#11111b'
         self.win = tk.Toplevel(self.root)
         self.win.title("LAE")
-        self.win.geometry("420x140")
+        self.win.geometry("460x96")
         self.win.resizable(False, False)
         self.win.overrideredirect(True)
-        self.win.attributes("-topmost", True)
-        self.win.configure(bg='#1e1e2e')
+        self.win.attributes("-topmost", True)   # always on top: desktop, apps, browsers
+        self.win.configure(bg=BG)
+        try:
+            self.win.attributes("-alpha", 0.92)  # translucent so background shows through
+        except tk.TclError:
+            pass
         self.win.withdraw()  # start hidden
 
-        # Position top-center
+        # Open at the CENTER of the screen
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
-        self.win.geometry(f"420x140+{(sw - 420) // 2}+80")
+        sh = self.root.winfo_screenheight()
+        self.win.geometry(f"460x96+{(sw - 460) // 2}+{(sh - 96) // 2}")
 
         self.win.bind("<Return>", self.on_enter)
         self.win.bind("<Escape>", lambda e: self.hide())
+        # click anywhere outside this window -> disappear
+        self.win.bind("<FocusOut>", self._on_focus_out)
+        # drag the window by its title label or background (not the text box)
+        self.win.bind("<ButtonPress-1>", self._start_drag)
+        self.win.bind("<B1-Motion>", self._on_drag)
 
-        frame = tk.Frame(self.win, bg='#1e1e2e', padx=12, pady=12)
-        frame.pack(fill=tk.BOTH, expand=True)
+        frame = tk.Frame(self.win, bg=BG)
+        frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
 
-        tk.Label(frame, text="LAE Assistant", bg='#1e1e2e', fg='#89b4fa',
-                 font=("Segoe UI", 10, "bold")).pack(anchor=tk.W)
+        self.title_label = tk.Label(frame, text="LAE", bg=BG, fg='#89b4fa',
+                                    font=("Segoe UI", 11, "bold"))
+        self.title_label.pack(anchor=tk.W, padx=10)
+        self.title_label.bind("<ButtonPress-1>", self._start_drag)
+        self.title_label.bind("<B1-Motion>", self._on_drag)
 
-        self.entry = tk.Entry(frame, font=("Segoe UI", 13), bg='#313244', fg='#cdd6f4',
-                              insertbackground='#cdd6f4', relief=tk.FLAT,
-                              highlightthickness=2, highlightbackground='#89b4fa')
-        self.entry.pack(fill=tk.X, pady=(8, 4))
+        self.entry = tk.Entry(frame, font=("Segoe UI", 14), bg='#1e1e2e', fg='#cdd6f4',
+                              insertbackground='#89b4fa', relief=tk.FLAT,
+                              highlightthickness=2, highlightbackground='#89b4fa',
+                              highlightcolor='#89b4fa')
+        self.entry.pack(fill=tk.X, padx=10, pady=(4, 2))
 
-        self.result_label = tk.Label(frame, text="", bg='#1e1e2e', fg='#a6e3a1',
-                                     font=("Segoe UI", 9), wraplength=390, justify=tk.LEFT)
-        self.result_label.pack(fill=tk.X)
+        self.result_label = tk.Label(frame, text="", bg=BG, fg='#f9e2af',
+                                     font=("Segoe UI", 9), wraplength=440, justify=tk.LEFT)
+        self.result_label.pack(fill=tk.X, padx=10)
 
-        tk.Label(frame, text=f"Enter = run | Esc = hide | Hotkey: {HOTKEY.upper()}",
-                 bg='#1e1e2e', fg='#6c7086', font=("Segoe UI", 8)).pack(anchor=tk.W, pady=(4, 0))
+        # Live status from controllers -> shown in the window (thread-safe)
+        self.lae.app_controller.on_status = lambda m: event_queue.put(("status", m))
+
+        # Pre-warm the installed-app cache in the background so first search is instant
+        threading.Thread(target=self.lae.app_controller.get_installed_apps,
+                         kwargs={"refresh": True}, daemon=True).start()
 
         # Tray icon
         self.tray = None
         self._make_tray()
 
-        # Poll event queue every 100ms (tkinter runs in main thread)
-        self.root.after(100, self.poll_events)
+        # Poll event queue every 50ms (tkinter runs in main thread)
+        self.root.after(50, self.poll_events)
 
     def _make_tray(self):
         try:
@@ -168,9 +187,13 @@ class LAEApp:
                     self.show()
                 elif msg == "quit":
                     self.quit()
+                elif isinstance(msg, tuple) and msg[0] == "status":
+                    self.result_label.config(text=msg[1], fg='#a6e3a1')
+                elif msg == "hide_later":
+                    self._hide_later()
         except queue.Empty:
             pass
-        self.root.after(100, self.poll_events)
+        self.root.after(30, self.poll_events)
 
     def show(self):
         self.win.deiconify()
@@ -178,44 +201,91 @@ class LAEApp:
         self.win.attributes("-topmost", True)
         self.entry.delete(0, tk.END)
         self.result_label.config(text="")
-        self.entry.focus_force()
+        # Robustly put the cursor in the typing bar without any click.
+        # Overrideredirect windows need several delayed attempts to accept focus.
+        def _focus():
+            self.win.lift()
+            self.win.attributes("-topmost", True)
+            self.win.focus_force()
+            self.entry.focus_force()
+            self.entry.focus_set()
+            self.entry.icursor(tk.END)
+        self.win.after(0, _focus)
+        self.win.after(50, _focus)
+        self.win.after(150, _focus)
+        self.win.after(400, _focus)
 
     def hide(self):
         self.win.withdraw()
+
+    def _start_drag(self, event):
+        if event.widget is self.entry:
+            self._dragging = False
+            return
+        self._dragging = True
+        self._drag_x = event.x
+        self._drag_y = event.y
+
+    def _on_drag(self, event):
+        if not getattr(self, "_dragging", False):
+            return
+        x = self.win.winfo_x() + event.x - self._drag_x
+        y = self.win.winfo_y() + event.y - self._drag_y
+        self.win.geometry(f"+{x}+{y}")
+
+    def _on_focus_out(self, event=None):
+        # hide when focus truly leaves the LAE window (click outside)
+        def check():
+            f = self.win.focus_get()
+            mine = (self.win, self.entry, self.result_label, self.title_label)
+            if f not in mine:
+                self.hide()
+        self.win.after(150, check)
 
     def on_enter(self, event=None):
         cmd = self.entry.get().strip()
         if not cmd:
             return
-        result = self.execute_command(cmd)
-        self.result_label.config(text=result[:150])
         self.entry.delete(0, tk.END)
-        self.win.after(2500, self.hide)
+        # Immediate status so it never feels late, then run work off the UI thread
+        self.result_label.config(text=f"⏳ {cmd}", fg='#f9e2af')
+        threading.Thread(target=self._run_cmd, args=(cmd,), daemon=True).start()
+
+    def _run_cmd(self, cmd):
+        result = self.execute_command(cmd)
+        event_queue.put(("status", result[:150]))
+        event_queue.put("hide_later")
+
+    def _hide_later(self):
+        self.win.after(2200, self.hide)
 
     def execute_command(self, command: str) -> str:
-        cmd = command.lower().strip()
+        raw = command.strip()
+        cmd = raw.lower()
         if "open website" in cmd or "open site" in cmd:
-            url = cmd.replace("open website", "").replace("open site", "").strip()
+            url = raw.lower().replace("open website", "").replace("open site", "").strip()
             if url and "." in url and not url.startswith(("http", "www")):
                 url = f"https://www.{url}"
             return self.lae.open_website(url)
         if cmd.startswith("search "):
-            parts = cmd.split()
-            if len(parts) >= 3 and parts[1] in ("on", "at", "in"):
+            parts = raw.split()
+            if len(parts) >= 3 and parts[1].lower() in ("on", "at", "in"):
                 return self.lae.search_website(" ".join(parts[3:]), parts[2])
-            return self.lae.search_website(cmd.replace("search", "").strip(), "duckduckgo")
+            return self.lae.search_website(raw.replace(parts[0], "", 1).strip(), "duckduckgo")
         if cmd.startswith("open app "):
-            return self.lae.open_app(cmd.replace("open app", "").strip())
+            # keep original case so app matching can prefer the case you typed
+            return self.lae.open_app(raw[len("open app"):].strip())
         if cmd.startswith("open "):
-            target = cmd.replace("open", "").strip()
+            target_raw = raw[len("open"):].strip()
+            target = target_raw.lower()
             if "." in target and not self.lae._is_app(target):
                 if not target.startswith(("http", "www")):
                     target = f"https://www.{target}"
                 return self.lae.open_website(target)
-            return self.lae.open_app(target)
+            return self.lae.open_app(target_raw)
         if cmd.startswith("run ") or cmd.startswith("execute "):
-            return self.lae.run_command(cmd.replace("run", "").replace("execute", "").strip())
-        return self.lae.run_command(cmd)
+            return self.lae.run_command(raw.split(None, 1)[1].strip())
+        return self.lae.run_command(raw)
 
     def quit(self):
         keyboard.unhook_all()
