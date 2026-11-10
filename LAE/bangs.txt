@@ -1,0 +1,93 @@
+LAE BANGS & SEARCHABLE SITES
+========================================
+
+HOW TO USE
+  Type a bang + your query in the LAE bar, e.g.:
+      !yt lofi beats
+      !az wireless mouse
+      !fk phone
+  Or use:  search <site> <query>     e.g.: search youtube lofi beats
+
+----------------------------------------
+WEB SEARCH ENGINES (bangs)
+----------------------------------------
+  !b          -> brave          https://search.brave.com/search?q=
+  !brave      -> brave          https://search.brave.com/search?q=
+  !g          -> google         https://www.google.com/search?q=
+  !google     -> google         https://www.google.com/search?q=
+  !ddg        -> duckduckgo     https://duckduckgo.com/?q=
+  !duckduckgo -> duckduckgo     https://duckduckgo.com/?q=
+  !bing       -> bing           https://www.bing.com/search?q=
+  !yh         -> yahoo          https://search.yahoo.com/search?p=
+  !yahoo      -> yahoo          https://search.yahoo.com/search?p=
+
+----------------------------------------
+BANGS (site search)  ->  site: URL
+----------------------------------------
+  !yt, !youtube        -> youtube:        https://www.youtube.com/results?search_query=
+  !ytm, !youtubemusic  -> youtube music:  https://music.youtube.com/search?q=
+  !pin, !pinterest     -> pinterest:      https://www.pinterest.com/search/pins/?q=
+  !r, !reddit          -> reddit:         https://www.reddit.com/search/?q=
+  !tw, !x, !twitter    -> twitter:        https://twitter.com/search?q=
+  !ig, !instagram      -> instagram:      https://www.instagram.com/explore/tags/
+  !fb, !facebook       -> facebook:       https://www.facebook.com/search/top?q=
+  !tt, !tiktok         -> tiktok:         https://www.tiktok.com/search?q=
+  !am, !az, !amazon    -> amazon:         https://www.amazon.com/s?k=
+  !fk, !flipkart       -> flipkart:       https://www.flipkart.com/search?q=
+  !eb, !ebay           -> ebay:           https://www.ebay.com/sch/i.html?_nkw=
+  !w, !wiki, !wikipedia -> wikipedia:     https://en.wikipedia.org/w/index.php?search=
+  !so, !stackoverflow  -> stackoverflow:  https://stackoverflow.com/search?q=
+  !gh, !github         -> github:         https://github.com/search?q=
+  !pypi                -> pypi:           https://pypi.org/search/?q=
+  !npm                 -> npm:            https://www.npmjs.com/search?q=
+  !maps                -> maps:           https://www.google.com/maps/search/
+  !news                -> news:           https://news.google.com/search?q=
+  !img                 -> images:         https://www.google.com/search?tbm=isch&q=
+  !vid                 -> videos:         https://www.google.com/search?tbm=vid&q=
+  !vimeo               -> vimeo:          https://vimeo.com/search?q=
+  !flickr              -> flickr:         https://www.flickr.com/search/?text=
+  !sc, !soundcloud     -> soundcloud:     https://soundcloud.com/search?q=
+  !sp, !spotify        -> spotify:        https://open.spotify.com/search/
+  !twitch              -> twitch:         https://www.twitch.tv/search?term=
+  !li, !linkedin       -> linkedin:       https://www.linkedin.com/search/results/all/?keywords=
+  !imdb                -> imdb:           https://www.imdb.com/find/?q=
+  !medium              -> medium:         https://medium.com/search?q=
+  !quora               -> quora:          https://www.quora.com/search?q=
+  !tumblr              -> tumblr:         https://www.tumblr.com/search/
+  (discord site search: https://discord.com/search?q=  — use: search discord <query>)
+
+----------------------------------------
+SITES  (use: search <site> <query>)
+----------------------------------------
+  youtube          https://www.youtube.com/results?search_query=
+  youtube music    https://music.youtube.com/search?q=
+  pinterest        https://www.pinterest.com/search/pins/?q=
+  reddit           https://www.reddit.com/search/?q=
+  twitter          https://twitter.com/search?q=
+  x                https://twitter.com/search?q=
+  instagram        https://www.instagram.com/explore/tags/
+  facebook         https://www.facebook.com/search/top?q=
+  tiktok           https://www.tiktok.com/search?q=
+  amazon           https://www.amazon.com/s?k=
+  flipkart         https://www.flipkart.com/search?q=
+  ebay             https://www.ebay.com/sch/i.html?_nkw=
+  wikipedia        https://en.wikipedia.org/w/index.php?search=
+  stackoverflow    https://stackoverflow.com/search?q=
+  github           https://github.com/search?q=
+  pypi             https://pypi.org/search/?q=
+  npm              https://www.npmjs.com/search?q=
+  medium           https://medium.com/search?q=
+  quora            https://www.quora.com/search?q=
+  tumblr           https://www.tumblr.com/search/
+  flickr           https://www.flickr.com/search/?text=
+  vimeo            https://vimeo.com/search?q=
+  soundcloud       https://soundcloud.com/search?q=
+  spotify          https://open.spotify.com/search/
+  twitch           https://www.twitch.tv/search?term=
+  discord          https://discord.com/search?q=
+  linkedin         https://www.linkedin.com/search/results/all/?keywords=
+  imdb             https://www.imdb.com/find/?q=
+  maps             https://www.google.com/maps/search/
+  news             https://news.google.com/search?q=
+  images           https://www.google.com/search?tbm=isch&q=
+  videos           https://www.google.com/search?tbm=vid&q=

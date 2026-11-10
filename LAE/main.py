@@ -10,6 +10,7 @@ import json
 import argparse
 import threading
 import queue
+import time
 import ctypes
 import tkinter as tk
 import keyboard
@@ -69,7 +70,8 @@ class LAE:
         return self.browser.open(url)
 
     def search_website(self, query: str, website: str = None) -> str:
-        return self.browser.search(query, website or DEFAULT_SEARCH_ENGINE)
+        # route to search_website (handles both sites and engines via resolve_site)
+        return self.browser.search_website(query, website or DEFAULT_SEARCH_ENGINE)
 
     def open_app(self, app_name: str) -> str:
         return self.app_controller.open(app_name)
@@ -105,17 +107,20 @@ class LAEApp:
         self.root = tk.Tk()
         self.root.withdraw()  # hidden until activated
 
-        # Overlay window — translucent dark panel that floats above everything
-        BG = '#11111b'
+        # Overlay window — white liquid-glass CAPSULE, only "LAE" on the left
+        W, H = 430, 88
+        FILL = '#ffffff'           # white glass body
+        INK = '#1a1a2e'            # text on white glass
         self.win = tk.Toplevel(self.root)
         self.win.title("LAE")
-        self.win.geometry("460x96")
+        self.win.geometry(f"{W}x{H}")
         self.win.resizable(False, False)
         self.win.overrideredirect(True)
         self.win.attributes("-topmost", True)   # always on top: desktop, apps, browsers
-        self.win.configure(bg=BG)
+        self.win.configure(bg='#000000')
         try:
-            self.win.attributes("-alpha", 0.92)  # translucent so background shows through
+            self.win.attributes("-alpha", 0.55)                 # liquid-glass translucency
+            self.win.attributes("-transparentcolor", '#000000')  # corners cut out -> capsule
         except tk.TclError:
             pass
         self.win.withdraw()  # start hidden
@@ -124,34 +129,50 @@ class LAEApp:
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
-        self.win.geometry(f"460x96+{(sw - 460) // 2}+{(sh - 96) // 2}")
+        self.win.geometry(f"{W}x{H}+{(sw - W) // 2}+{(sh - H) // 2}")
 
         self.win.bind("<Return>", self.on_enter)
         self.win.bind("<Escape>", lambda e: self.hide())
-        # click anywhere outside this window -> disappear
-        self.win.bind("<FocusOut>", self._on_focus_out)
-        # drag the window by its title label or background (not the text box)
-        self.win.bind("<ButtonPress-1>", self._start_drag)
+        self.win.bind("<FocusOut>", self._on_focus_out)          # click outside -> hide
+        self.win.bind("<ButtonPress-1>", self._start_drag)       # drag the capsule
         self.win.bind("<B1-Motion>", self._on_drag)
 
-        frame = tk.Frame(self.win, bg=BG)
-        frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        # Single clean pill (left+right arcs + middle rect), all same fill, no seams
+        self.canvas = tk.Canvas(self.win, width=W, height=H, bg='#000000', highlightthickness=0)
+        self.canvas.pack(fill=tk.BOTH, expand=True)
+        r = H // 2
+        self.canvas.create_oval(1, 1, 1 + 2 * r, H - 1, fill=FILL, outline=FILL)
+        self.canvas.create_rectangle(r, 1, W - r, H - 1, fill=FILL, outline=FILL)
+        self.canvas.create_oval(W - 1 - 2 * r, 1, W - 1, H - 1, fill=FILL, outline=FILL)
+        self.canvas.bind("<ButtonPress-1>", self._start_drag)
+        self.canvas.bind("<B1-Motion>", self._on_drag)
 
-        self.title_label = tk.Label(frame, text="LAE", bg=BG, fg='#89b4fa',
-                                    font=("Segoe UI", 11, "bold"))
-        self.title_label.pack(anchor=tk.W, padx=10)
+        # Only "LAE" on the left of the top row
+        self.title_label = tk.Label(self.win, text="LAE", bg=FILL, fg=INK,
+                                    font=("Segoe UI", 14, "bold"))
+        self.canvas.create_window(24, 26, window=self.title_label, anchor='w')
         self.title_label.bind("<ButtonPress-1>", self._start_drag)
         self.title_label.bind("<B1-Motion>", self._on_drag)
 
-        self.entry = tk.Entry(frame, font=("Segoe UI", 14), bg='#1e1e2e', fg='#cdd6f4',
-                              insertbackground='#89b4fa', relief=tk.FLAT,
-                              highlightthickness=2, highlightbackground='#89b4fa',
-                              highlightcolor='#89b4fa')
-        self.entry.pack(fill=tk.X, padx=10, pady=(4, 2))
+        # Typing bar fills the rest of the top row (status no longer overlaps it)
+        self.entry = tk.Entry(self.win, font=("Segoe UI", 14), bg=FILL, fg=INK,
+                              insertbackground=INK, relief=tk.FLAT,
+                              highlightthickness=0, borderwidth=0)
+        self.canvas.create_window(84, 26, window=self.entry, anchor='w',
+                                  width=W - 104, height=30)
 
-        self.result_label = tk.Label(frame, text="", bg=BG, fg='#f9e2af',
-                                     font=("Segoe UI", 9), wraplength=440, justify=tk.LEFT)
-        self.result_label.pack(fill=tk.X, padx=10)
+        # status on its own row at the bottom of the capsule, left-aligned
+        self.result_label = tk.Label(self.win, text="", bg=FILL, fg='#666688',
+                                     font=("Segoe UI", 9), anchor='w')
+        self.canvas.create_window(24, 62, window=self.result_label, anchor='nw',
+                                  width=W - 48)
+
+        # Small ✕ close button at the top-right corner
+        self.close_btn = tk.Label(self.win, text="✕", bg=FILL, fg=INK,
+                                  font=("Segoe UI", 10, "bold"), cursor="hand2",
+                                  width=2, height=1)
+        self.canvas.create_window(W - 6, 4, window=self.close_btn, anchor='ne')
+        self.close_btn.bind("<Button-1>", lambda e: self.hide())
 
         # Live status from controllers -> shown in the window (thread-safe)
         self.lae.app_controller.on_status = lambda m: event_queue.put(("status", m))
@@ -167,14 +188,35 @@ class LAEApp:
         # Poll event queue every 50ms (tkinter runs in main thread)
         self.root.after(50, self.poll_events)
 
+    def _draw_polyhedron(self, c):
+        """Wireframe 3D polyhedron logo (the shape from the image) on a canvas."""
+        c.delete("all")
+        outer = [(15, 2), (27, 10), (23, 27), (7, 27), (3, 10)]
+        inner = [(15, 8), (22, 12), (20, 22), (10, 22), (8, 12)]
+        for p in (outer, inner):
+            for i in range(5):
+                x1, y1 = p[i]
+                x2, y2 = p[(i + 1) % 5]
+                c.create_line(x1, y1, x2, y2, fill='#cdd6f4', width=1)
+        for o, i in zip(outer, inner):
+            c.create_line(o[0], o[1], i[0], i[1], fill='#89b4fa', width=1)
+
     def _make_tray(self):
         try:
             import pystray
             from PIL import Image, ImageDraw
-            img = Image.new('RGB', (64, 64), color='#89b4fa')
+            img = Image.new('RGB', (64, 64), color=(17, 17, 27))
             dc = ImageDraw.Draw(img)
-            dc.rectangle([16, 16, 48, 48], fill='#1e1e2e')
-            dc.text((24, 24), "L", fill='#cdd6f4')
+            dc.rounded_rectangle([4, 4, 60, 60], radius=16, fill=(28, 28, 40), outline=(90, 90, 140))
+            s = 2  # scale 30->60
+            outer = [(15 * s - 15, 2 * s - 2), (27 * s - 15, 10 * s - 2), (23 * s - 15, 27 * s - 2),
+                     (7 * s - 15, 27 * s - 2), (3 * s - 15, 10 * s - 2)]
+            inner = [(15 * s - 15, 8 * s - 2), (22 * s - 15, 12 * s - 2), (20 * s - 15, 22 * s - 2),
+                     (10 * s - 15, 22 * s - 2), (8 * s - 15, 12 * s - 2)]
+            for p in (outer, inner):
+                dc.line(p + [p[0]], fill=(205, 214, 244), width=2)
+            for o, i in zip(outer, inner):
+                dc.line([o, i], fill=(137, 180, 250), width=2)
 
             def on_open(icon, item):
                 event_queue.put("show")
@@ -209,24 +251,27 @@ class LAEApp:
         self.root.after(30, self.poll_events)
 
     def show(self):
+        self._shown_at = time.time()
         self.win.deiconify()
         self.win.lift()
         self.win.attributes("-topmost", True)
         self.entry.delete(0, tk.END)
         self.result_label.config(text="")
-        # Robustly put the cursor in the typing bar without any click.
-        # Overrideredirect windows need several delayed attempts to accept focus.
+        # Aggressively put the cursor in the typing bar without any click.
+        # Overrideredirect windows need repeated, delayed focus attempts.
         def _focus():
-            self.win.lift()
-            self.win.attributes("-topmost", True)
-            self.win.focus_force()
-            self.entry.focus_force()
-            self.entry.focus_set()
-            self.entry.icursor(tk.END)
-        self.win.after(0, _focus)
-        self.win.after(50, _focus)
-        self.win.after(150, _focus)
-        self.win.after(400, _focus)
+            try:
+                self.win.lift()
+                self.win.attributes("-topmost", True)
+                self.win.focus_force()
+                self.win.focus_set()
+                self.entry.focus_force()
+                self.entry.focus_set()
+                self.entry.icursor(tk.END)
+            except tk.TclError:
+                pass
+        for d in (0, 30, 80, 150, 300, 500, 800):
+            self.win.after(d, _focus)
 
     def hide(self):
         self.win.withdraw()
@@ -247,13 +292,17 @@ class LAEApp:
         self.win.geometry(f"+{x}+{y}")
 
     def _on_focus_out(self, event=None):
-        # hide when focus truly leaves the LAE window (click outside)
+        # hide when focus truly leaves the LAE window (click outside).
+        # Ignore the focus flurry right after showing (first ~0.8s) so the
+        # window isn't hidden before our focus_force attempts land.
         def check():
+            if time.time() - getattr(self, "_shown_at", 0) < 0.8:
+                return
             f = self.win.focus_get()
-            mine = (self.win, self.entry, self.result_label, self.title_label)
+            mine = (self.win, self.entry, self.result_label, self.title_label, self.close_btn)
             if f not in mine:
                 self.hide()
-        self.win.after(150, check)
+        self.win.after(200, check)
 
     def on_enter(self, event=None):
         cmd = self.entry.get().strip()
@@ -275,6 +324,12 @@ class LAEApp:
     def execute_command(self, command: str) -> str:
         raw = command.strip()
         cmd = raw.lower()
+        # Helium-style bangs: !yt <query>, !g <query>, !pin <query> ...
+        if raw.startswith("!"):
+            parts = raw.split(None, 1)
+            bang = parts[0][1:]
+            query = parts[1] if len(parts) > 1 else ""
+            return self.lae.browser.bang_search(bang, query)
         if "open website" in cmd or "open site" in cmd:
             url = raw.lower().replace("open website", "").replace("open site", "").strip()
             if url and "." in url and not url.startswith(("http", "www")):
@@ -282,8 +337,12 @@ class LAEApp:
             return self.lae.open_website(url)
         if cmd.startswith("search "):
             parts = raw.split()
+            # "search on/at/in <site> <query>"  OR  "search <site> <query>"
             if len(parts) >= 3 and parts[1].lower() in ("on", "at", "in"):
                 return self.lae.search_website(" ".join(parts[3:]), parts[2])
+            if len(parts) >= 3 and self.lae.browser.resolve_site(parts[1])[1] is not None:
+                return self.lae.search_website(" ".join(parts[2:]), parts[1])
+            # plain web search on default engine
             return self.lae.search_website(raw.replace(parts[0], "", 1).strip())
         if cmd.startswith("open app "):
             # keep original case so app matching can prefer the case you typed
