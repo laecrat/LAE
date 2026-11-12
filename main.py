@@ -139,7 +139,6 @@ class LAEApp:
         self.win.bind("<FocusOut>", self._on_focus_out)          # click outside -> hide
         self.win.bind("<ButtonPress-1>", self._start_drag)       # drag the capsule
         self.win.bind("<B1-Motion>", self._on_drag)
-        self.win.bind("<Map>", lambda e: self._focus_entry())    # focus as soon as shown
 
         # Single clean pill (left+right arcs + middle rect), all same fill, no seams
         self.canvas = tk.Canvas(self.win, width=W, height=H, bg='#000000', highlightthickness=0)
@@ -266,25 +265,29 @@ class LAEApp:
     def _focus_entry(self):
         """Put keyboard focus into the entry without any click.
         Windows ignores focus_force() on overrideredirect windows, so we
-        briefly drop the override, grab focus, then restore it."""
-        state = {"done": False}
+        briefly drop the override, grab focus, then restore it — keeping
+        the geometry pinned so the capsule doesn't jump to the corner."""
+        if getattr(self, "_focusing", False):
+            return
+        self._focusing = True
+        geo = self.win.geometry()
         def grab():
             try:
-                if not state["done"]:
-                    # Toggle overrideredirect so Windows grants focus to the window
-                    self.win.overrideredirect(False)
-                    self.win.update_idletasks()
-                    state["done"] = True
+                self.win.overrideredirect(False)
+                self.win.geometry(geo)          # pin position while bordered
+                self.win.update_idletasks()
                 self.win.focus_force()
                 self.entry.focus_force()
                 self.entry.icursor(tk.END)
-                if state["done"]:
-                    self.win.overrideredirect(True)
-                    self.win.lift()
-                    self.win.attributes("-topmost", True)
+                self.win.overrideredirect(True)
+                self.win.geometry(geo)          # restore center position
+                self.win.lift()
+                self.win.attributes("-topmost", True)
             except tk.TclError:
                 pass
-        for d in (0, 10, 30, 80, 150, 300, 500, 800, 1200):
+            finally:
+                self._focusing = False
+        for d in (0, 30, 80, 200, 400):
             self.win.after(d, grab)
 
     def hide(self):
