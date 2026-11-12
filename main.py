@@ -263,26 +263,26 @@ class LAEApp:
         self._focus_entry()
 
     def _focus_entry(self):
-        """Put keyboard focus into the entry without any click.
-        Windows ignores focus_force() on overrideredirect windows, so we
-        briefly drop the override, grab focus, then restore it — keeping
-        the geometry pinned so the capsule doesn't jump to the corner."""
+        """Put keyboard focus into the entry without any click, without flicker.
+        Toggling overrideredirect makes Windows redraw the frame (visible flicker),
+        so instead we call SetForegroundWindow on the raw HWND — this works on
+        borderless windows and doesn't repaint them."""
         if getattr(self, "_focusing", False):
             return
         self._focusing = True
-        geo = self.win.geometry()
         def grab():
             try:
-                self.win.overrideredirect(False)
-                self.win.geometry(geo)          # pin position while bordered
-                self.win.update_idletasks()
+                # Bring the borderless window to the foreground via Win32
+                try:
+                    hwnd = int(self.win.frame(), 16)
+                    ctypes.windll.user32.SetForegroundWindow(hwnd)
+                except Exception:
+                    pass
+                self.win.lift()
+                self.win.attributes("-topmost", True)
                 self.win.focus_force()
                 self.entry.focus_force()
                 self.entry.icursor(tk.END)
-                self.win.overrideredirect(True)
-                self.win.geometry(geo)          # restore center position
-                self.win.lift()
-                self.win.attributes("-topmost", True)
             except tk.TclError:
                 pass
             finally:
