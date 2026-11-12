@@ -60,6 +60,14 @@ search python tutorials
 search stackoverflow python list
 run git status
 execute python --version
+
+# Power management commands
+lock          # or L     - Lock the workstation
+sleep         # or S     - Put laptop to sleep
+signout       # or O     - Sign out / logoff
+shutdown      # or D     - Shutdown the system
+restart       #          - Restart the system
+hibernate     #          - Hibernate the system
 ```
 
 Keys: **Enter** = run · **Esc** = hide · drag the title to move · click outside to dismiss.
@@ -80,6 +88,10 @@ python main.py open https://www.google.com
 python main.py search "machine learning"
 python main.py run chrome
 python main.py execute "git status"
+python main.py lock        # lock workstation
+python main.py sleep       # sleep
+python main.py signout     # sign out
+python main.py shutdown    # shutdown
 ```
 
 ### Modes
@@ -91,11 +103,10 @@ python main.py --bg        # background mode for pythonw / launchers
 
 ## Project structure
 ```
-LAE/
-├── main.py                 # CLI + LAEApp (floating bar, tray, hotkey, drag, focus)
+├── main.py                 # CLI + LAEApp (floating bar, tray, hotkey, drag, focus, power commands)
 ├── app_controller.py       # installed-app scan + case-aware match + hidden launch
 ├── browser_controller.py   # websites & search engines
-├── command_executor.py     # safe system commands (hidden window)
+├── command_executor.py     # safe system commands + power management (lock/sleep/signout/shutdown)
 ├── config.json             # hotkey + settings (edit me)
 ├── requirements.txt
 ├── lae.bat                 # background launcher (pythonw, no console)

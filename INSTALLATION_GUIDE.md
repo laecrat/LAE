@@ -333,6 +333,12 @@ python main.py run python --version
 | `search <site> <query>` | Search specific site | `search youtube lofi` |
 | `run <command>` | Run system command | `run git status` |
 | `execute <command>` | Alternative to run | `execute ls -la` |
+| `lock` or `L` | Lock the workstation | `lock` |
+| `sleep` or `S` | Put laptop to sleep | `sleep` |
+| `signout` or `O` | Sign out / logoff | `signout` |
+| `shutdown` or `D` | Shutdown the system | `shutdown` |
+| `restart` | Restart the system | `restart` |
+| `hibernate` | Hibernate the system | `hibernate` |
 
 ### Bangs (Helium-style Search Shortcuts)
 
@@ -593,6 +599,14 @@ LAE/
 │   search <site> <q>    → Site search                          │
 │   !yt <query>          → YouTube bang                         │
 │   run <command>        → Execute command                      │
+├─────────────────────────────────────────────────────────────┤
+│ POWER COMMANDS                                                │
+│   lock / L             → Lock workstation                     │
+│   sleep / S            → Put to sleep                         │
+│   signout / O          → Sign out                             │
+│   shutdown / D         → Shutdown system                      │
+│   restart              → Restart system                       │
+│   hibernate            → Hibernate                            │
 ├─────────────────────────────────────────────────────────────┤
 │ HOTKEY                                                        │
 │   Win + `    → Open command bar                               │
