@@ -337,8 +337,8 @@ python main.py run python --version
 | `sleep` or `S` | Put laptop to sleep | `sleep` |
 | `signout` or `O` | Sign out / logoff | `signout` |
 | `shutdown` or `D` | Shutdown the system | `shutdown` |
-| `restart` | Restart the system | `restart` |
-| `hibernate` | Hibernate the system | `hibernate` |
+| `restart` or `R` | Restart the system | `restart` |
+| `hibernate` or `H` | Hibernate the system | `hibernate` |
 
 ### Bangs (Helium-style Search Shortcuts)
 
@@ -605,8 +605,8 @@ LAE/
 │   sleep / S            → Put to sleep                         │
 │   signout / O          → Sign out                             │
 │   shutdown / D         → Shutdown system                      │
-│   restart              → Restart system                       │
-│   hibernate            → Hibernate                            │
+│   restart / R          → Restart system                       │
+│   hibernate / H        → Hibernate                            │
 ├─────────────────────────────────────────────────────────────┤
 │ HOTKEY                                                        │
 │   Win + `    → Open command bar                               │

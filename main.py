@@ -80,7 +80,7 @@ class LAE:
         return self.executor.run(command)
 
     def execute(self, action: str, target: str) -> str:
-        power_actions = {"lock", "l", "sleep", "s", "signout", "o", "logoff", "shutdown", "d", "restart", "reboot", "hibernate"}
+        power_actions = {"lock", "l", "sleep", "s", "signout", "o", "logoff", "shutdown", "d", "restart", "reboot", "hibernate", "h", "r"}
         if action.lower() in power_actions:
             return self.executor.power_command(action)
         if action == "open" and self._is_url(target):
@@ -364,8 +364,8 @@ class LAEApp:
             "sleep": "sleep", "s": "sleep",
             "signout": "signout", "logoff": "signout", "o": "signout",
             "shutdown": "shutdown", "d": "shutdown",
-            "restart": "restart", "reboot": "restart",
-            "hibernate": "hibernate",
+            "restart": "restart", "reboot": "restart", "r": "restart",
+            "hibernate": "hibernate", "h": "hibernate",
         }
         if cmd in power_map:
             return self.lae.executor.power_command(power_map[cmd])
@@ -387,7 +387,7 @@ class LAEApp:
 
 def main():
     parser = argparse.ArgumentParser(description="LAE - AI Assistant")
-    parser.add_argument("action", nargs="?", choices=["open", "search", "run", "execute", "lock", "sleep", "signout", "shutdown", "restart", "hibernate", "l", "s", "o", "d"])
+    parser.add_argument("action", nargs="?", choices=["open", "search", "run", "execute", "lock", "sleep", "signout", "shutdown", "restart", "hibernate", "l", "s", "o", "d", "h", "r"])
     parser.add_argument("target", nargs="?")
     parser.add_argument("--hotkey", "-k", action="store_true",
                         help=f"Run hotkey overlay + tray ({HOTKEY.upper()})")

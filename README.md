@@ -66,8 +66,8 @@ lock          # or L     - Lock the workstation
 sleep         # or S     - Put laptop to sleep
 signout       # or O     - Sign out / logoff
 shutdown      # or D     - Shutdown the system
-restart       #          - Restart the system
-hibernate     #          - Hibernate the system
+restart       # or R     - Restart the system
+hibernate     # or H     - Hibernate the system
 ```
 
 Keys: **Enter** = run · **Esc** = hide · drag the title to move · click outside to dismiss.
