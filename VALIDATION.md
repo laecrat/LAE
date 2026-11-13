@@ -39,11 +39,14 @@ Test the basic functionality:
 # Test opening a website (without hotkey mode)
 python main.py open https://www.google.com
 
-# Test running a command
-python main.py execute "echo Hello World"
-
 # Test opening an app
-python main.py run powershell
+python main.py open chrome
+
+# Test searching
+python main.py search "python tutorials"
+
+# Test power management
+python main.py lock
 ```
 
 ### 4. Check File Structure
@@ -52,7 +55,7 @@ Ensure all required files are present:
 - ✅ main.py - Main entry point
 - ✅ browser_controller.py - Website handling
 - ✅ app_controller.py - Application management
-- ✅ command_executor.py - System command execution
+- ✅ command_executor.py - Power management
 - ✅ requirements.txt - Dependencies
 - ✅ README.md - Documentation
 - ✅ LICENSE - MIT License

@@ -1,13 +1,12 @@
 # LAE - AI Assistant
 
-**LAE** (Launcher and Assistant for Everything) is a Windows-first voice/typing assistant: press a hotkey, type a command, and it opens websites, searches the web, launches your installed apps, and runs commands — with a floating translucent command bar.
+**LAE** (Launcher and Assistant for Everything) is a Windows-first voice/typing assistant: press a hotkey, type a command, and it opens websites, searches the web, launches your installed apps, and manages system power — with a floating translucent command bar.
 
 ## Features
 
 - 🌐 **Open websites** — `open website google.com` opens `https://www.google.com`
 - 🔍 **Web & site search** — `search python tutorials`, or `search github claude code` to search on a specific site
 - 💻 **Smart app launching** — `open app <name>` scans your **real installed apps** (Start Menu shortcuts + UWP/Store apps via `Get-StartApps`) and opens the match. Matching is case-aware: exact case you typed wins (`boy` → `boy`, not `Boy`), otherwise case-insensitive (`girls` → `Girls`), then substring (`chrome` → `Google Chrome`)
-- ⚡ **Run commands** — `run git status`, `execute ls -la`
 - 🪟 **Floating command bar** — translucent (`-alpha`), always-on-top window that opens at the **center of the screen**
 - ⌨️ **Configurable hotkey** — default `win+`` ` (set in `config.json` → `features.hotkey`); conflict-free on Windows. Tray icon (double-click) always works without admin
 - 👆 **Auto-focus** — cursor lands in the typing bar automatically, no click needed
@@ -18,7 +17,6 @@
 - 🚫 **No console flash** — apps launch via Win32 `ShellExecuteW` / `explorer.exe`, so no cmd window ever pops up
 - 🔁 **Runs in background** — via `pythonw.exe` (no console); survives closing the terminal
 - 🖥️ **Desktop shortcut + startup** — one-click launch and auto-start on login
-- 🛡️ **Safe mode** — blocks dangerous commands by default
 
 ## Installation
 
@@ -58,8 +56,6 @@ open app helium            # finds installed app by name (case-aware)
 open chrome
 search python tutorials
 search stackoverflow python list
-run git status
-execute python --version
 
 # Power management commands
 lock          # or L     - Lock the workstation
@@ -87,7 +83,6 @@ The default is in `config.json` → `features.browser.default_engine` (currently
 python main.py open https://www.google.com
 python main.py search "machine learning"
 python main.py run chrome
-python main.py execute "git status"
 python main.py lock        # lock workstation
 python main.py sleep       # sleep
 python main.py signout     # sign out
@@ -106,7 +101,7 @@ python main.py --bg        # background mode for pythonw / launchers
 ├── main.py                 # CLI + LAEApp (floating bar, tray, hotkey, drag, focus, power commands)
 ├── app_controller.py       # installed-app scan + case-aware match + hidden launch
 ├── browser_controller.py   # websites & search engines
-├── command_executor.py     # safe system commands + power management (lock/sleep/signout/shutdown)
+├── command_executor.py     # power management (lock/sleep/signout/shutdown)
 ├── config.json             # hotkey + settings (edit me)
 ├── requirements.txt
 ├── lae.bat                 # background launcher (pythonw, no console)
@@ -125,9 +120,6 @@ python main.py --bg        # background mode for pythonw / launchers
 python -m py_compile main.py app_controller.py browser_controller.py command_executor.py
 python test_installation.py
 ```
-
-## Security
-Safe mode blocks dangerous commands (e.g. `rm -rf`, destructive redirects) and requires explicit permission for global installs.
 
 ## License
 MIT — see [LICENSE](LICENSE).

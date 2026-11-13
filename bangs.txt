@@ -8,6 +8,14 @@ HOW TO USE
       !fk phone
   Or use:  search <site> <query>     e.g.: search youtube lofi beats
 
+COMMANDS (without arguments)
+  lock          # Lock the workstation
+  sleep         # Put laptop to sleep
+  hibernate     # Hibernate the system
+  signout       # Sign out / logoff
+  shutdown      # Shutdown the system
+  restart       # Restart the system
+
 ----------------------------------------
 WEB SEARCH ENGINES (bangs)
 ----------------------------------------

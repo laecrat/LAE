@@ -9,7 +9,7 @@ $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($shortcutPath)
 $Shortcut.TargetPath = Join-Path $scriptDir "lae.bat"
 $Shortcut.WorkingDirectory = $scriptDir
-$Shortcut.Description = "LAE AI Assistant - Ctrl+Alt+L or click tray icon"
+$Shortcut.Description = "LAE AI Assistant - click tray icon"
 $Shortcut.WindowStyle = 7  # Minimized
 $Shortcut.Save()
 

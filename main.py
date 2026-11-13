@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LAE - AI Assistant
-An AI assistant that can open websites, apps and run programs as instructed.
+An AI assistant that opens websites and apps, and manages system power.
 """
 
 import sys
@@ -76,9 +76,6 @@ class LAE:
     def open_app(self, app_name: str) -> str:
         return self.app_controller.open(app_name)
 
-    def run_command(self, command: str) -> str:
-        return self.executor.run(command)
-
     def execute(self, action: str, target: str) -> str:
         power_actions = {"lock", "l", "sleep", "s", "signout", "o", "logoff", "shutdown", "d", "restart", "reboot", "hibernate", "h", "r"}
         if action.lower() in power_actions:
@@ -90,7 +87,7 @@ class LAE:
         elif action == "run" and self._is_app(target):
             return self.open_app(target)
         elif action in ("execute", "run"):
-            return self.run_command(target)
+            return f"❌ Command execution is not available in this version.\nUse: open, search, or power commands."
         else:
             return f"Unknown action '{action}' or target '{target}'"
 
@@ -231,7 +228,7 @@ class LAEApp:
                 pystray.MenuItem(f"Open LAE ({HOTKEY.upper()})", on_open, default=True),
                 pystray.MenuItem("Quit", on_quit)
             )
-            self.tray = pystray.Icon("LAE", img, "LAE Assistant (Ctrl+Alt+L)", menu)
+            self.tray = pystray.Icon("LAE", img, "LAE", menu)
             threading.Thread(target=self.tray.run, daemon=True).start()
         except Exception as e:
             print(f"[WARN] Tray icon failed: {e}")
@@ -369,9 +366,7 @@ class LAEApp:
         }
         if cmd in power_map:
             return self.lae.executor.power_command(power_map[cmd])
-        if cmd.startswith("run ") or cmd.startswith("execute "):
-            return self.lae.run_command(raw.split(None, 1)[1].strip())
-        return self.lae.run_command(raw)
+        return f"Unknown command: '{cmd}'"
 
     def quit(self):
         keyboard.unhook_all()
@@ -387,7 +382,7 @@ class LAEApp:
 
 def main():
     parser = argparse.ArgumentParser(description="LAE - AI Assistant")
-    parser.add_argument("action", nargs="?", choices=["open", "search", "run", "execute", "lock", "sleep", "signout", "shutdown", "restart", "hibernate", "l", "s", "o", "d", "h", "r"])
+    parser.add_argument("action", nargs="?", choices=["open", "search", "lock", "sleep", "signout", "shutdown", "restart", "hibernate", "l", "s", "o", "d", "h", "r"])
     parser.add_argument("target", nargs="?")
     parser.add_argument("--hotkey", "-k", action="store_true",
                         help=f"Run hotkey overlay + tray ({HOTKEY.upper()})")
