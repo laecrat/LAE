@@ -126,13 +126,14 @@ class LAEApp:
             self.win.attributes("-transparentcolor", '#000000')  # corners cut out -> capsule
         except tk.TclError:
             pass
-        self.win.geometry(f"{W}x{H}-5000-5000")  # parked off-screen instead of withdrawn (avoids flicker)
-
-        # Open at the CENTER of the screen
+        # Park off-screen at startup (window stays mapped -> no unmap/remap flicker).
+        # The centered geometry is stored and applied only when show() runs.
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
-        self.win.geometry(f"{W}x{H}+{(sw - W) // 2}+{(sh - H) // 2}")
+        self._center_geo = f"{W}x{H}+{(sw - W) // 2}+{(sh - H) // 2}"
+        self._shown = False
+        self.win.geometry(f"{W}x{H}-5000-5000")
 
         self.win.bind("<Return>", self.on_enter)
         self.win.bind("<Escape>", lambda e: self.hide())
@@ -258,10 +259,7 @@ class LAEApp:
         # Move back on-screen instead of deiconify — remapping a withdrawn
         # window is what caused the visible flicker.
         self._shown = True
-        sw = self.root.winfo_screenwidth()
-        sh = self.root.winfo_screenheight()
-        W, H = 430, 88
-        self.win.geometry(f"{W}x{H}+{(sw - W) // 2}+{(sh - H) // 2}")
+        self.win.geometry(self._center_geo)
         self.win.lift()
         self.win.attributes("-topmost", True)
         self.entry.delete(0, tk.END)
@@ -320,6 +318,8 @@ class LAEApp:
         # Ignore the focus flurry right after showing (first ~0.8s) so the
         # window isn't hidden before our focus_force attempts land.
         def check():
+            if not getattr(self, "_shown", False):
+                return
             if time.time() - getattr(self, "_shown_at", 0) < 0.8:
                 return
             f = self.win.focus_get()
