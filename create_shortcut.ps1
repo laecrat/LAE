@@ -9,8 +9,15 @@ $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($shortcutPath)
 $Shortcut.TargetPath = Join-Path $scriptDir "lae.bat"
 $Shortcut.WorkingDirectory = $scriptDir
-$Shortcut.Description = "LAE AI Assistant - click tray icon"
+$Shortcut.Description = "LAE"
 $Shortcut.WindowStyle = 7  # Minimized
+
+# Try to set icon if LAE.ico exists in script directory
+$iconPath = Join-Path $scriptDir "LAE.ico"
+if (Test-Path $iconPath) {
+    $Shortcut.IconLocation = $iconPath
+}
+
 $Shortcut.Save()
 
 Write-Host "Desktop shortcut created: $shortcutPath" -ForegroundColor Green
