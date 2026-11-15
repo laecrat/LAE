@@ -123,14 +123,13 @@ class LAEApp:
             self.win.attributes("-transparentcolor", '#000000')  # corners cut out -> capsule
         except tk.TclError:
             pass
-        # Park off-screen at startup (window stays mapped -> no unmap/remap flicker).
-        # The centered geometry is stored and applied only when show() runs.
+        # Store the centered geometry and start hidden (withdrawn).
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
         self._center_geo = f"{W}x{H}+{(sw - W) // 2}+{(sh - H) // 2}"
         self._shown = False
-        self.win.geometry(f"{W}x{H}-5000-5000")
+        self.win.withdraw()  # start hidden
 
         self.win.bind("<Return>", self.on_enter)
         self.win.bind("<Escape>", lambda e: self.hide())
@@ -261,10 +260,9 @@ class LAEApp:
 
     def show(self):
         self._shown_at = time.time()
-        # Move back on-screen instead of deiconify — remapping a withdrawn
-        # window is what caused the visible flicker.
         self._shown = True
         self.win.geometry(self._center_geo)
+        self.win.deiconify()
         self.win.lift()
         self.win.attributes("-topmost", True)
         self.entry.delete(0, tk.END)
@@ -301,7 +299,7 @@ class LAEApp:
 
     def hide(self):
         self._shown = False
-        self.win.geometry("430x88-5000-5000")   # park off-screen; never unmap (no flicker)
+        self.win.withdraw()
 
     def _start_drag(self, event):
         if event.widget is self.entry:
