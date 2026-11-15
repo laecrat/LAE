@@ -205,19 +205,27 @@ class LAEApp:
     def _make_tray(self):
         try:
             import pystray
-            from PIL import Image, ImageDraw
-            img = Image.new('RGB', (64, 64), color=(17, 17, 27))
-            dc = ImageDraw.Draw(img)
-            dc.rounded_rectangle([4, 4, 60, 60], radius=16, fill=(28, 28, 40), outline=(90, 90, 140))
-            s = 2  # scale 30->60
-            outer = [(15 * s - 15, 2 * s - 2), (27 * s - 15, 10 * s - 2), (23 * s - 15, 27 * s - 2),
-                     (7 * s - 15, 27 * s - 2), (3 * s - 15, 10 * s - 2)]
-            inner = [(15 * s - 15, 8 * s - 2), (22 * s - 15, 12 * s - 2), (20 * s - 15, 22 * s - 2),
-                     (10 * s - 15, 22 * s - 2), (8 * s - 15, 12 * s - 2)]
-            for p in (outer, inner):
-                dc.line(p + [p[0]], fill=(205, 214, 244), width=2)
-            for o, i in zip(outer, inner):
-                dc.line([o, i], fill=(137, 180, 250), width=2)
+            from PIL import Image
+            import os
+
+            # Try to use LAE.ico if it exists, otherwise fall back to default icon
+            icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "LAE.ico")
+            if os.path.exists(icon_path):
+                img = Image.open(icon_path).convert('RGBA').resize((64, 64), Image.Resampling.LANCZOS)
+            else:
+                from PIL import ImageDraw
+                img = Image.new('RGB', (64, 64), color=(17, 17, 27))
+                dc = ImageDraw.Draw(img)
+                dc.rounded_rectangle([4, 4, 60, 60], radius=16, fill=(28, 28, 40), outline=(90, 90, 140))
+                s = 2  # scale 30->60
+                outer = [(15 * s - 15, 2 * s - 2), (27 * s - 15, 10 * s - 2), (23 * s - 15, 27 * s - 2),
+                         (7 * s - 15, 27 * s - 2), (3 * s - 15, 10 * s - 2)]
+                inner = [(15 * s - 15, 8 * s - 2), (22 * s - 15, 12 * s - 2), (20 * s - 15, 22 * s - 2),
+                         (10 * s - 15, 22 * s - 2), (8 * s - 15, 12 * s - 2)]
+                for p in (outer, inner):
+                    dc.line(p + [p[0]], fill=(205, 214, 244), width=2)
+                for o, i in zip(outer, inner):
+                    dc.line([o, i], fill=(137, 180, 250), width=2)
 
             def on_open(icon, item):
                 event_queue.put("show")
