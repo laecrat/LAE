@@ -123,13 +123,14 @@ class LAEApp:
             self.win.attributes("-transparentcolor", '#000000')  # corners cut out -> capsule
         except tk.TclError:
             pass
-        self.win.withdraw()  # start hidden
-
-        # Open at the CENTER of the screen
+        # Park off-screen at startup (window stays mapped -> no unmap/remap flicker).
+        # The centered geometry is stored and applied only when show() runs.
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
-        self.win.geometry(f"{W}x{H}+{(sw - W) // 2}+{(sh - H) // 2}")
+        self._center_geo = f"{W}x{H}+{(sw - W) // 2}+{(sh - H) // 2}"
+        self._shown = False
+        self.win.geometry(f"{W}x{H}-5000-5000")
 
         self.win.bind("<Return>", self.on_enter)
         self.win.bind("<Escape>", lambda e: self.hide())
@@ -252,29 +253,47 @@ class LAEApp:
 
     def show(self):
         self._shown_at = time.time()
-        self.win.deiconify()
+        # Move back on-screen instead of deiconify — remapping a withdrawn
+        # window is what caused the visible flicker.
+        self._shown = True
+        self.win.geometry(self._center_geo)
         self.win.lift()
         self.win.attributes("-topmost", True)
         self.entry.delete(0, tk.END)
         self.result_label.config(text="")
-        # Aggressively put the cursor in the typing bar without any click.
-        # Overrideredirect windows need repeated, delayed focus attempts.
-        def _focus():
+        self._focus_entry()
+
+    def _focus_entry(self):
+        """Put keyboard focus into the entry without any click, without flicker.
+        Toggling overrideredirect makes Windows redraw the frame (visible flicker),
+        so instead we call SetForegroundWindow on the raw HWND — this works on
+        borderless windows and doesn't repaint them."""
+        if getattr(self, "_focusing", False):
+            return
+        self._focusing = True
+        def grab():
             try:
+                # Bring the borderless window to the foreground via Win32
+                try:
+                    hwnd = int(self.win.frame(), 16)
+                    ctypes.windll.user32.SetForegroundWindow(hwnd)
+                except Exception:
+                    pass
                 self.win.lift()
                 self.win.attributes("-topmost", True)
                 self.win.focus_force()
-                self.win.focus_set()
                 self.entry.focus_force()
-                self.entry.focus_set()
                 self.entry.icursor(tk.END)
             except tk.TclError:
                 pass
-        for d in (0, 30, 80, 150, 300, 500, 800):
-            self.win.after(d, _focus)
+            finally:
+                self._focusing = False
+        for d in (0, 30, 80, 200, 400):
+            self.win.after(d, grab)
 
     def hide(self):
-        self.win.withdraw()
+        self._shown = False
+        self.win.geometry("430x88-5000-5000")   # park off-screen; never unmap (no flicker)
 
     def _start_drag(self, event):
         if event.widget is self.entry:
@@ -296,6 +315,8 @@ class LAEApp:
         # Ignore the focus flurry right after showing (first ~0.8s) so the
         # window isn't hidden before our focus_force attempts land.
         def check():
+            if not getattr(self, "_shown", False):
+                return
             if time.time() - getattr(self, "_shown_at", 0) < 0.8:
                 return
             f = self.win.focus_get()
