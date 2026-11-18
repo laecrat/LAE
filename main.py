@@ -113,7 +113,7 @@ class LAEApp:
         self.root.withdraw()  # hidden until activated
 
         # Overlay window — white liquid-glass CAPSULE, only "LAE" on the left
-        W, H = 430, 88
+        W, H = 500, 58   # width 500px, height 2/3 of the previous 88px
         FILL = '#ffffff'           # white glass body
         INK = '#1a1a2e'            # text on white glass
         self.win = tk.Toplevel(self.root)
@@ -154,23 +154,23 @@ class LAEApp:
 
         # Only "LAE" on the left of the top row
         self.title_label = tk.Label(self.win, text="LAE", bg=FILL, fg=INK,
-                                    font=("Segoe UI", 14, "bold"))
-        self.canvas.create_window(24, 26, window=self.title_label, anchor='w')
+                                    font=("Segoe UI", 12, "bold"))
+        self.canvas.create_window(18, 16, window=self.title_label, anchor='w')
         self.title_label.bind("<ButtonPress-1>", self._start_drag)
         self.title_label.bind("<B1-Motion>", self._on_drag)
 
         # Typing bar fills the rest of the top row (status no longer overlaps it)
-        self.entry = tk.Entry(self.win, font=("Segoe UI", 14), bg=FILL, fg=INK,
+        self.entry = tk.Entry(self.win, font=("Segoe UI", 12), bg=FILL, fg=INK,
                               insertbackground=INK, relief=tk.FLAT,
                               highlightthickness=0, borderwidth=0)
-        self.canvas.create_window(84, 26, window=self.entry, anchor='w',
-                                  width=W - 104, height=30)
+        self.canvas.create_window(72, 16, window=self.entry, anchor='w',
+                                  width=W - 92, height=24)
 
-        # status on its own row at the bottom of the capsule, left-aligned
-        self.result_label = tk.Label(self.win, text="", bg=FILL, fg='#666688',
+        # Status row: clear, professional line at the bottom of the capsule
+        self.result_label = tk.Label(self.win, text="", bg=FILL, fg='#3c3c5a',
                                      font=("Segoe UI", 9), anchor='w')
-        self.canvas.create_window(24, 62, window=self.result_label, anchor='nw',
-                                  width=W - 48)
+        self.canvas.create_window(18, 40, window=self.result_label, anchor='nw',
+                                  width=W - 36)
 
         # Small ✕ close button at the top-right corner
         self.close_btn = tk.Label(self.win, text="✕", bg=FILL, fg=INK,
@@ -256,7 +256,7 @@ class LAEApp:
                 elif msg == "quit":
                     self.quit()
                 elif isinstance(msg, tuple) and msg[0] == "status":
-                    self.result_label.config(text=msg[1], fg='#a6e3a1')
+                    self.result_label.config(text=msg[1], fg='#2e7d32')
                 elif msg == "hide_later":
                     self._hide_later()
         except queue.Empty:
@@ -342,12 +342,12 @@ class LAEApp:
             return
         self.entry.delete(0, tk.END)
         # Immediate status so it never feels late, then run work off the UI thread
-        self.result_label.config(text=f"⏳ {cmd}", fg='#f9e2af')
+        self.result_label.config(text=f"Running: {cmd}", fg='#a07c1f')
         threading.Thread(target=self._run_cmd, args=(cmd,), daemon=True).start()
 
     def _run_cmd(self, cmd):
         result = self.execute_command(cmd)
-        event_queue.put(("status", result[:150]))
+        event_queue.put(("status", result[:120]))
         event_queue.put("hide_later")
 
     def _hide_later(self):
