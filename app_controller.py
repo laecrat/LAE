@@ -14,6 +14,12 @@ import shutil
 import glob
 import json
 import ctypes
+import difflib
+
+# Minimum similarity (0..1) for fuzzy matching, and minimum query length
+# (in characters) before fuzzy matching is allowed at all.
+FUZZY_THRESHOLD = 0.6
+FUZZY_MIN_QUERY_LEN = 4
 
 
 class AppController:
@@ -177,7 +183,7 @@ class AppController:
         return self._app_cache
 
     def find_app(self, query: str):
-        """Find an installed app using RELATIVE (substring) matching.
+        """Find an installed app using relative/substring/fuzzy matching.
 
         Case rules:
           1. exact match of the query AS TYPED (case-sensitive) wins
@@ -186,7 +192,11 @@ class AppController:
              app name inside query); among them prefer the one whose letters
              match the query's case most, then the shortest name.
              e.g. 'boy' -> 'boy' not 'Boy'; 'girls' -> 'Girls'; 'chrome' -> 'Google Chrome'
-        Returns (display_name, launcher) or None.
+          4. otherwise fuzzy matching (similarity >= FUZZY_THRESHOLD), but only
+             when the query is 4+ characters long, so short names never fuzzy-guess.
+             e.g. 'whatapp'/'whatsap'/'whatappppp' -> 'WhatsApp';
+                  'intel graphics' -> 'Intel Graphics Command Center'
+        Returns (display_name, kind, payload) or None.
         """
         q = query.strip()
         if not q:
@@ -208,10 +218,48 @@ class AppController:
             return exact[0]
         # 3) relative / substring matches
         rel = [e for e in apps if ql in e[0].lower() or e[0].lower() in ql]
-        if not rel:
-            return None
-        rel.sort(key=lambda e: (-case_score(e[0]), len(e[0])))
-        return rel[0]
+        if rel:
+            rel.sort(key=lambda e: (-case_score(e[0]), len(e[0])))
+            return rel[0]
+        # 4) fuzzy matching — only for queries of 4+ characters, so short
+        #    names like "cmd" or "git" never trigger a fuzzy guess.
+        #    e.g. 'whatapp'/'whatsap'/'whatappppp' -> 'WhatsApp',
+        #         'intel graphics' -> 'Intel Graphics Command Center'
+        if len(q) >= FUZZY_MIN_QUERY_LEN:
+            best = None
+            best_key = None
+            for e in apps:
+                score = self._fuzzy_score(ql, e[0].lower())
+                if score < FUZZY_THRESHOLD:
+                    continue
+                key = (-score, -case_score(e[0]), len(e[0]))
+                if best_key is None or key < best_key:
+                    best = e
+                    best_key = key
+            if best is not None:
+                return best
+        return None
+
+    @staticmethod
+    def _fuzzy_score(ql: str, name: str) -> float:
+        """Similarity in 0..1 between a lowercased query and a lowercased app name."""
+        # whole-string similarity
+        score = difflib.SequenceMatcher(None, ql, name).ratio()
+        # spacing-insensitive comparison ("intelgraphics" vs "intel graphics ...")
+        concat = difflib.SequenceMatcher(None, ql.replace(" ", ""), name.replace(" ", "")).ratio()
+        score = max(score, concat)
+        # token-based: every query word matched against its best app word
+        qwords = ql.split()
+        nwords = name.split()
+        if qwords and nwords:
+            total = 0.0
+            for qw in qwords:
+                best = max((difflib.SequenceMatcher(None, qw, nw).ratio() for nw in nwords), default=0.0)
+                if any(qw in nw or nw in qw for nw in nwords):
+                    best = max(best, 0.85)
+                total += best
+            score = max(score, total / len(qwords))
+        return score
 
     # ------------------------------------------------------------- launchers
     def _launch_windows_app(self, app_path: str) -> str:

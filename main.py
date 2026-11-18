@@ -17,6 +17,7 @@ import keyboard
 from browser_controller import BrowserController
 from app_controller import AppController
 from command_executor import CommandExecutor
+from file_controller import FileController
 
 DEFAULT_HOTKEY = 'win+`'
 
@@ -65,9 +66,13 @@ class LAE:
         self.browser = BrowserController()
         self.app_controller = AppController()
         self.executor = CommandExecutor()
+        self.file_controller = FileController()
 
     def open_website(self, url: str) -> str:
         return self.browser.open(url)
+
+    def open_file(self, name: str) -> str:
+        return self.file_controller.open_file(name)
 
     def search_website(self, query: str, website: str = None) -> str:
         # route to search_website (handles both sites and engines via resolve_site)
@@ -371,6 +376,8 @@ class LAEApp:
                 return self.lae.search_website(" ".join(parts[2:]), parts[1])
             # plain web search on default engine
             return self.lae.search_website(raw.replace(parts[0], "", 1).strip())
+        if cmd.startswith("open file "):
+            return self.lae.open_file(raw[len("open file"):].strip())
         if cmd.startswith("open app "):
             # keep original case so app matching can prefer the case you typed
             return self.lae.open_app(raw[len("open app"):].strip())
