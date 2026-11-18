@@ -6,7 +6,8 @@ Search order:
   1. Everything CLI (es.exe) if installed — instant, uses the Windows index
   2. PowerShell recursive search of the user's common folders
      (Desktop, Documents, Downloads, Pictures, Videos, Music, OneDrive)
-  3. If nothing is found, open the query in Windows Explorer search (search-ms:)
+  If nothing is found, a clear "Not found" status is returned — Explorer
+  is never opened automatically.
 """
 
 import os
@@ -43,9 +44,7 @@ class FileController:
         try:
             results = self.search(query)
             if not results:
-                # fall back to showing the query in Windows Explorer search
-                self._open_explorer_search(query)
-                return f"🔍 No file found for '{query}' — opened Windows search instead"
+                return f"❌ Not found: no file matching '{query}' on this PC"
             best = self._rank(results, query)[0]
             if self._shell_open(best):
                 return f"📂 Opened: {best}"

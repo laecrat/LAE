@@ -256,7 +256,8 @@ class LAEApp:
                 elif msg == "quit":
                     self.quit()
                 elif isinstance(msg, tuple) and msg[0] == "status":
-                    self.result_label.config(text=msg[1], fg='#2e7d32')
+                    fg = msg[2] if len(msg) > 2 else '#00a344'
+                    self.result_label.config(text=msg[1], fg=fg)
                 elif msg == "hide_later":
                     self._hide_later()
         except queue.Empty:
@@ -342,12 +343,14 @@ class LAEApp:
             return
         self.entry.delete(0, tk.END)
         # Immediate status so it never feels late, then run work off the UI thread
-        self.result_label.config(text=f"Running: {cmd}", fg='#a07c1f')
+        self.result_label.config(text=f"Running: {cmd}", fg='#e65100')
         threading.Thread(target=self._run_cmd, args=(cmd,), daemon=True).start()
 
     def _run_cmd(self, cmd):
         result = self.execute_command(cmd)
-        event_queue.put(("status", result[:120]))
+        # Vibrant status color: red for failures, green for success
+        fg = '#d32f2f' if result.startswith('❌') else '#00a344'
+        event_queue.put(("status", result[:120], fg))
         event_queue.put("hide_later")
 
     def _hide_later(self):
