@@ -8,6 +8,7 @@ import urllib.parse
 import subprocess
 import platform
 import re
+import ctypes
 
 
 class BrowserController:
@@ -58,6 +59,10 @@ class BrowserController:
             "news": "https://news.google.com/search?q=",
             "images": "https://www.google.com/search?tbm=isch&q=",
             "videos": "https://www.google.com/search?tbm=vid&q=",
+            # File Explorer: search-ms: is a Windows shell URI, opened via ShellExecute
+            "explorer": "search-ms:query=",
+            "files": "search-ms:query=",
+            "file explorer": "search-ms:query=",
         }
 
         # Bangs (Helium-style): !yt <query> -> search youtube. Aliases included.
@@ -86,6 +91,7 @@ class BrowserController:
             "sp": "spotify", "spotify": "spotify", "twitch": "twitch",
             "li": "linkedin", "linkedin": "linkedin", "imdb": "imdb",
             "medium": "medium", "quora": "quora", "tumblr": "tumblr",
+            "xp": "explorer", "xpl": "explorer", "explorer": "explorer", "files": "explorer",
         }
 
         # Homepage for each site (used when a bang is typed with no query)
@@ -126,6 +132,7 @@ class BrowserController:
             "duckduckgo": "https://duckduckgo.com",
             "bing": "https://www.bing.com",
             "yahoo": "https://search.yahoo.com",
+            "explorer": "search-ms:query=",
         }
 
     def open(self, url: str) -> str:
@@ -192,14 +199,25 @@ class BrowserController:
                 return site, self.sites[site]
         return None, None
 
+    def _open(self, url: str):
+        """Open a URL/URI. Windows shell URIs (search-ms:, shell:) need ShellExecuteW."""
+        if platform.system() == "Windows" and not url.lower().startswith(("http://", "https://")):
+            try:
+                ctypes.windll.shell32.ShellExecuteW(None, "open", url, None, None, 1)
+                return
+            except Exception:
+                pass
+        webbrowser.open(url)
+
     def search_website(self, query: str, website: str) -> str:
         """Search within a specific website (name or !bang)."""
         site, base = self.resolve_site(website)
         if base is None:
-            return f"❌ Unknown site/bang '{website}'. Try: youtube, pinterest, reddit, wikipedia, github, amazon, maps, images ... or bangs like !yt !pin !w !g"
+            return f"❌ Unknown site/bang '{website}'. Try: youtube, pinterest, reddit, wikipedia, github, amazon, maps, images, explorer ... or bangs like !yt !pin !w !g !xp"
         search_url = base + urllib.parse.quote(query)
-        webbrowser.open(search_url)
-        return f"🔍 '{query}' on {site}: {search_url}"
+        self._open(search_url)
+        label = "File Explorer" if site in ("explorer", "files", "file explorer") else site
+        return f"🔍 '{query}' in {label}: {search_url}"
 
     def bang_search(self, bang: str, query: str) -> str:
         """Helium-style bang: !yt <query>. Bare !yt (no query) opens the site home."""
@@ -207,13 +225,18 @@ class BrowserController:
         if base is None:
             return f"❌ Unknown bang !{bang}"
         if not query.strip():
+            if site in ("explorer", "files", "file explorer"):
+                # bare !xp -> open File Explorer (This PC)
+                subprocess.Popen(["explorer.exe"],
+                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000))
+                return "🗂️ Opened File Explorer"
             home = self.homepages.get(site)
             if home:
-                webbrowser.open(home)
+                self._open(home)
                 return f"🌐 Opened {site}: {home}"
             # fall back to opening the site root derived from the search URL
             home = base.split("?")[0]
-            webbrowser.open(home)
+            self._open(home)
             return f"🌐 Opened {site}: {home}"
         return self.search_website(query, bang)
 

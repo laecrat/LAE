@@ -56,6 +56,7 @@ open app helium            # finds installed app by name (case-aware)
 open chrome
 search python tutorials
 search stackoverflow python list
+!xp resume.pdf        # search files on this PC in Windows Explorer (bare !xp opens Explorer)
 
 # Power management commands
 lock          # or L     - Lock the workstation

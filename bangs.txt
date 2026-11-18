@@ -62,6 +62,7 @@ BANGS (site search)  ->  site: URL
   !medium              -> medium:         https://medium.com/search?q=
   !quora               -> quora:          https://www.quora.com/search?q=
   !tumblr              -> tumblr:         https://www.tumblr.com/search/
+  !xp, !xpl, !explorer -> explorer:       search-ms:query=   (searches files in Windows Explorer)
   (discord site search: https://discord.com/search?q=  — use: search discord <query>)
 
 ----------------------------------------
@@ -99,3 +100,4 @@ SITES  (use: search <site> <query>)
   news             https://news.google.com/search?q=
   images           https://www.google.com/search?tbm=isch&q=
   videos           https://www.google.com/search?tbm=vid&q=
+  explorer         search-ms:query=        (use: !xp <query> or search explorer <query> — searches files on this PC)
